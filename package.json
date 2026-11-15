@@ -25,7 +25,8 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env src/database/sqlite/seed/device.seed.ts",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fastify/cors": "^11.4.3",
@@ -55,7 +56,9 @@
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
     "drizzle-kit": "^0.31.11",
+    "husky": "^9.1.7",
     "jest": "^30.0.0",
+    "lint-staged": "^17.6.0",
     "oxlint": "^1.58.0",
     "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.4.2",

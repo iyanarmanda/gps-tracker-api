@@ -1,0 +1,66 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pnpm setup
+        uses: pnpm/action-setup@v4
+
+      - name: Node setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit testing
+        run: pnpm test
+
+  e2e-testing:
+    runs-on: ubuntu-latest
+    needs:
+      - unit-testing
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pnpm setup
+        uses: pnpm/action-setup@v4
+
+      - name: Node setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start test container
+        run: pnpm test:e2e:up
+
+      - name: Run e2e-testing
+        run: pnpm test:e2e
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs
+
+      - name: Stop test containers
+        if: always()
+        run: pnpm test:e2e:down

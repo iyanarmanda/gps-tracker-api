@@ -1,0 +1,6 @@
+{
+  "*.{js,cjs,ts}": [
+    "oxlint --type-aware",
+    "prettier --write"
+  ]
+}
