@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const telemetryPayloadSchema = z.object({
@@ -9,4 +10,4 @@ export const telemetryPayloadSchema = z.object({
   timestamp: z.number().int().positive().optional(),
 });
 
-export type TelemetryPayloadSchema = z.infer<typeof telemetryPayloadSchema>;
+export class TelemetryPayloadDto extends createZodDto(telemetryPayloadSchema) {}

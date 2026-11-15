@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const sendCommandSchema = z.object({
@@ -5,5 +6,4 @@ export const sendCommandSchema = z.object({
   interval: z.number().int().min(1).max(3600).optional(),
 });
 
-export type SendCommandSchema = z.infer<typeof sendCommandSchema>;
-
+export class SendCommandDto extends createZodDto(sendCommandSchema) {}

@@ -1,6 +1,7 @@
-import { BadRequestException, Body, Controller, Param, Patch } from '@nestjs/common';
-import { sendCommandSchema } from './schemas/send-command.schema';
+import { Body, Controller, Param, Patch } from '@nestjs/common';
 import { DevicesService } from './devices.service';
+
+import type { SendCommandDto } from './schemas/send-command.schema';
 
 @Controller('devices')
 export class DevicesController {
@@ -9,17 +10,8 @@ export class DevicesController {
   @Patch(':espId/command')
   async sendCommand(
     @Param('espId') espId: string,
-    @Body() rawBody: unknown,
+    @Body() dto: SendCommandDto,
   ) {
-    const parsed = sendCommandSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      throw new BadRequestException({
-        message: 'Payload not valid',
-        errors: parsed.error.issues,
-      });
-    }
-
-    return this.devicesService.sendCommand(espId, parsed.data);
+    return this.devicesService.sendCommand(espId, dto);
   }
 }

@@ -10,8 +10,8 @@ import { devices } from '../../database/sqlite/schemas/devices.schema';
 import { REDIS_CLIENT } from '../../database/redis/redis.constant';
 import { MQTT_CLIENT } from '../../config/mqtt/mqtt.constant';
 
-import type { SendCommandSchema } from './schemas/send-command.schema';
-import type { DeviceCommandPayload } from './interfaces/device-command.interface'
+import type { SendCommandDto } from './schemas/send-command.schema';
+import type { DeviceCommandPayload } from './interfaces/device-command.interface';
 
 @Injectable()
 export class DevicesService {
@@ -29,7 +29,7 @@ export class DevicesService {
     private readonly mqttClient: ClientProxy,
   ) {}
 
-  async sendCommand(espId: string, dto: SendCommandSchema) {
+  async sendCommand(espId: string, dto: SendCommandDto) {
     const existing = await this.db
       .select()
       .from(devices)

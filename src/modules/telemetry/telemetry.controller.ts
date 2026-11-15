@@ -1,7 +1,8 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, MqttContext, Payload } from '@nestjs/microservices';
-import { telemetryPayloadSchema } from './schemas/telemetry.schema';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { TelemetryService } from './telemetry.service';
+
+import type { TelemetryPayloadDto } from './schemas/telemetry.schema';
 
 @Controller()
 export class TelemetryController {
@@ -11,17 +12,8 @@ export class TelemetryController {
 
   @EventPattern('tracker/devices/+/telemetry')
   async handleTelemetry(
-    @Payload() rawPayload: unknown,
+    @Payload() payload: TelemetryPayloadDto,
   ): Promise<void> {
-    const parsed = telemetryPayloadSchema.safeParse(rawPayload);
-
-    if (!parsed.success) {
-      this.logger.warn(
-        `Invalid telemetry payload: ${parsed.error.message}`,
-      );
-      return;
-    }
-
-    await this.telemetryService.saveTelemetry(parsed.data);
+    await this.telemetryService.saveTelemetry(payload);
   }
 }

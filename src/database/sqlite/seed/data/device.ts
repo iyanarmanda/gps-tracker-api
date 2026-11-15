@@ -23,4 +23,3 @@ export const initialDevices: NewDevice[] = [
     activatedAt: null,
   },
 ];
-
