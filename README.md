@@ -28,11 +28,17 @@ Drizzle ORM configuration:
 
 ```bash
 # first/instant migration
-$ pnpm drizzle-kit push
+$ pnpm db:push
 
 # manual migration
 $ pnpm drizzle-kit generate
 $ pnpm drizzle-kit migration
+```
+
+Seeding database:
+
+```bash
+$ pnpm db:seed
 ```
 
 If using Docker for create `Redis` and `Mosquitto`:
