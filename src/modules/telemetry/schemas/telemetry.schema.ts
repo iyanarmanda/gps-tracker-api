@@ -9,4 +9,4 @@ export const telemetryPayloadSchema = z.object({
   timestamp: z.number().int().positive().optional(),
 });
 
-export type TelemetryPayload = z.infer<typeof telemetryPayloadSchema>;
+export type TelemetryPayloadSchema = z.infer<typeof telemetryPayloadSchema>;

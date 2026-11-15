@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../../database/redis/redis.constant';
 
-import type { TelemetryPayload } from './schemas/telemetry.schema';
+import type { TelemetryPayloadSchema } from './schemas/telemetry.schema';
 
 @Injectable()
 export class TelemetryService {
@@ -11,7 +11,7 @@ export class TelemetryService {
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
-  async saveTelemetry(payload: TelemetryPayload): Promise<void> {
+  async saveTelemetry(payload: TelemetryPayloadSchema): Promise<void> {
     const locationKey = `device:${payload.device_id}:location`;
     const updatedAt = payload.timestamp ?? Math.floor(Date.now() / 1000);
 
