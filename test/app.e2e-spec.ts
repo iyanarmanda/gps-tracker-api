@@ -1,7 +1,10 @@
 import { VersioningType } from '@nestjs/common';
 import { getDrizzleToken } from '@nestjs/drizzle';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { eq } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -64,7 +67,7 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
     redis = app.get<Redis>(REDIS_CLIENT);
 
     virtualEsp = await connectAsync(
-      process.env.MQTT_URL,
+      process.env.MQTT_URL ?? 'mqtt://localhost:1883',
       {
         username: process.env.MQTT_USER,
         password: process.env.MQTT_PASSWORD,
@@ -110,7 +113,9 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
         (resolve) => {
           virtualEsp.once('message', (topic, message) => {
             if (topic === commandTopic) {
-              resolve(JSON.parse(message.toString()) as Record<string, unknown>);
+              resolve(
+                JSON.parse(message.toString()) as Record<string, unknown>,
+              );
             }
           });
         },
