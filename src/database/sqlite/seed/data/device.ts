@@ -1,4 +1,4 @@
-import type { NewDevices } from '../../schemas/devices.schema';
+import type { NewDevice } from '../../schemas/devices.schema';
 
 export const initialDevices: NewDevice[] = [
   {

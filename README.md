@@ -32,7 +32,7 @@ $ pnpm db:push
 
 # manual migration
 $ pnpm drizzle-kit generate
-$ pnpm drizzle-kit migration
+$ pnpm db:migrate
 ```
 
 Seeding database:
