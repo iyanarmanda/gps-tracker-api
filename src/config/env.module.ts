@@ -5,7 +5,7 @@ import { z } from 'zod';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env',
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
       isGlobal: true,
       validate: (env) => {
         const schema = z.object({

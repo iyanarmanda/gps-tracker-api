@@ -1,0 +1,37 @@
+services:
+  redis-test:
+    image: redis:7-alpine
+    container_name: tracker-redis-test
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  mosquitto-test:
+    image: eclipse-mosquitto:latest
+    container_name: tracker-mosquitto-test
+    environment:
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+    ports:
+      - "${MQTT_PORT:-1884}:1883"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        mosquitto_passwd -b -c /tmp/passwordfile "$$MQTT_USER" "$$MQTT_PASSWORD"
+        chown mosquitto:mosquitto /tmp/passwordfile
+        chmod 600 /tmp/passwordfile
+        cat <<EOF > /tmp/mosquitto.conf
+        listener 1883
+        allow_anonymous false
+        password_file /tmp/passwordfile
+        EOF
+        exec /usr/sbin/mosquitto -c /tmp/mosquitto.conf
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -p 1883 -u $$MQTT_USER -P $$MQTT_PASSWORD -t healthcheck -m ok"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
