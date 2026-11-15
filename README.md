@@ -8,8 +8,8 @@ GPS Tracker API built with [NestJS](https://github.com/nestjs/nest) framework.
 
 ## Prerequisites
 
-- [node.js (>= v22)](https://nodejs.org/en)
-- [pnpm](https://pnpm.io/id)
+- [node.js (>= v24)](https://nodejs.org/en)
+- [pnpm (>= v12)](https://pnpm.io/id)
 
 Database & Client:
 
