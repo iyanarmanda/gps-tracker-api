@@ -24,6 +24,8 @@ Database & Client:
 $ pnpm install
 ```
 
+Create `.env` variables based on `.env.example`.
+
 Drizzle ORM configuration:
 
 ```bash
@@ -59,6 +61,9 @@ $ pnpm run start
 
 # watch mode
 $ pnpm run start:dev
+
+# build
+$ pnpm run build
 
 # production mode
 $ pnpm run start:prod
@@ -151,12 +156,12 @@ $ pnpm run test:e2e:down
 
 ```bash
 # linter
-$ pnpm lint
+$ pnpm run lint
 
 # formatter
-$ pnpm format
+$ pnpm run format
 
 # type-check
-$ pnpm check
+$ pnpm run check
 ```
 
