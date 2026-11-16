@@ -19,6 +19,18 @@ export class DevicesService {
     private readonly mqttClient: ClientProxy,
   ) {}
 
+  async findAll() {
+    const allDevices = await this.devicesRepository.findAll();
+    const espIds = allDevices.map((device) => device.espId);
+    const locationMap =
+      await this.devicesRepository.getLocationsByEspIds(espIds);
+
+    return allDevices.map((device) => ({
+      ...device,
+      location: locationMap.get(device.espId) ?? null,
+    }));
+  }
+
   async recordTelemetry(payload: TelemetryPayloadDto): Promise<void> {
     const updatedAt = payload.timestamp ?? Math.floor(Date.now() / 1000);
 

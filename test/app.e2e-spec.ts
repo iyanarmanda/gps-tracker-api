@@ -104,6 +104,42 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
     });
   });
 
+  describe('GET /api/v1/devices', () => {
+    it('should return all devices from SQLite with last location from Redis', async () => {
+      await redis.hset(`device:${TEST_ESP_ID}:location`, {
+        lat: '-7.257472',
+        lng: '112.752088',
+        speed: '12.5',
+        satelite: '7',
+        active: 'true',
+        updated_at: '1793701140',
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/devices',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json<Array<Record<string, unknown>>>();
+
+      expect(body).toHaveLength(1);
+      expect(body[0]).toMatchObject({
+        espId: TEST_ESP_ID,
+        name: 'Test Unit 01',
+        isActive: false,
+        interval: 10,
+        location: {
+          lat: -7.257472,
+          lng: 112.752088,
+          speed: 12.5,
+          satellites: 7,
+          updatedAt: 1793701140,
+        },
+      });
+    });
+  });
+
   describe('PATCH /api/v1/devices/:espId/command', () => {
     it('should update SQLite, synchronize Redis, and publish command to ESP32 via MQTT', async () => {
       const commandTopic = `tracker/devices/${TEST_ESP_ID}/command`;
