@@ -23,14 +23,14 @@ describe('sendCommandSchema', () => {
       }
     });
 
-    it('should accept value within minimum (1) dan maximum (3600) on interval', () => {
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: 1 }).success,
-      ).toBe(true);
+    it.each([2, 5, 10, 30])('should accept interval %i second', (interval) => {
+      const payload = { active: true, interval };
+      const result = sendCommandSchema.safeParse(payload);
 
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: 3600 }).success,
-      ).toBe(true);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(payload);
+      }
     });
 
     it('should initialization via SendCommandDto.create()', () => {
@@ -48,28 +48,16 @@ describe('sendCommandSchema', () => {
       expect(sendCommandSchema.safeParse({ active: 1 }).success).toBe(false);
     });
 
-    it('should reject if interval less than 1 or more than 3600', () => {
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: 0 }).success,
-      ).toBe(false);
+    it.each([0, 1, 3, 7, 15, 60, 3600, -5, 2.5, '10'])(
+      'should reject if interval outer than [2, 5, 10, 30]: %p',
+      (invalidInterval) => {
+        const result = sendCommandSchema.safeParse({
+          active: true,
+          interval: invalidInterval,
+        });
 
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: -5 }).success,
-      ).toBe(false);
-
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: 3601 }).success,
-      ).toBe(false);
-    });
-
-    it('should reject if interval type is decimal or string', () => {
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: 2.5 }).success,
-      ).toBe(false);
-
-      expect(
-        sendCommandSchema.safeParse({ active: true, interval: '10' }).success,
-      ).toBe(false);
-    });
+        expect(result.success).toBe(false);
+      },
+    );
   });
 });

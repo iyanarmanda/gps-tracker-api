@@ -3,7 +3,9 @@ import { z } from 'zod';
 
 export const sendCommandSchema = z.object({
   active: z.boolean(),
-  interval: z.number().int().min(1).max(3600).optional(),
+  interval: z
+    .union([z.literal(2), z.literal(5), z.literal(10), z.literal(30)])
+    .optional(),
 });
 
 export class SendCommandDto extends createZodDto(sendCommandSchema) {}
