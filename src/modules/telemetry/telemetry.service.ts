@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DevicesService } from '../devices/devices.service';
 
 import type { TelemetryPayloadDto } from './schemas/telemetry.schema';

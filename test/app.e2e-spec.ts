@@ -30,6 +30,7 @@ async function waitForCondition(
 
 describe('GPS Tracker API & MQTT (e2e)', () => {
   let app: NestFastifyApplication;
+  let baseUrl: string;
   let db: BetterSQLite3Database<typeof schema>;
   let redis: Redis;
   let virtualEsp: MqttClient;
@@ -62,6 +63,9 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
 
     await app.init();
     await app.startAllMicroservices();
+    await app.listen(0, '127.0.0.1');
+
+    baseUrl = await app.getUrl();
 
     db = app.get<BetterSQLite3Database<typeof schema>>(getDrizzleToken());
     redis = app.get<Redis>(REDIS_CLIENT);
@@ -74,6 +78,7 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
       },
     );
   });
+
   beforeEach(async () => {
     await redis.flushdb();
     await db.delete(devices);
@@ -137,6 +142,55 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
           updatedAt: 1793701140,
         },
       });
+    });
+  });
+
+  describe('SSE /api/v1/devices/stream', () => {
+    it('should stream event telemetry in real-time while ESP32 send geo data', async () => {
+      const abortController = new AbortController();
+
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/devices/stream`, {
+          signal: abortController.signal,
+          headers: { Accept: 'text/event-stream' },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get('content-type')).toContain(
+          'text/event-stream',
+        );
+
+        const reader = response.body?.getReader();
+        expect(reader).toBeDefined();
+
+        const telemetryTopic = `tracker/devices/${TEST_ESP_ID}/telemetry`;
+        await virtualEsp.publishAsync(
+          telemetryTopic,
+          JSON.stringify({
+            device_id: TEST_ESP_ID,
+            lat: -7.257472,
+            lng: 112.752088,
+            speed: 30.2,
+            satellites: 10,
+            timestamp: 1793701200,
+          }),
+        );
+
+        const decoder = new TextDecoder();
+        let receivedChunk = '';
+
+        while (!receivedChunk.includes('data:')) {
+          const { value, done } = await reader!.read();
+          if (done) break;
+          receivedChunk += decoder.decode(value, { stream: true });
+        }
+
+        expect(receivedChunk).toContain('event: telemetry');
+        expect(receivedChunk).toContain(`"espId":"${TEST_ESP_ID}"`);
+        expect(receivedChunk).toContain('"lat":-7.257472');
+      } finally {
+        abortController.abort();
+      }
     });
   });
 
