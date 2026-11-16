@@ -48,7 +48,7 @@ If using Docker for create `Redis` and `Mosquitto`:
 $ docker compose up -d
 
 # delete container
-$ docker compose down -V
+$ docker compose down -v
 ```
 
 ## Compile and run the project
