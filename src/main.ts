@@ -3,6 +3,7 @@ import { VersioningType } from '@nestjs/common';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { ConfigService } from '@nestjs/config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import fastifyCookie from '@fastify/cookie';
 import { CorsConfig } from './config/cors.config';
 import { AppModule } from './app.module';
 
@@ -24,6 +25,8 @@ async function bootstrap() {
       password: configService.getOrThrow<string>('MQTT_PASSWORD'),
     },
   });
+
+  await app.register(fastifyCookie);
 
   app.enableCors(CorsConfig(configService));
 

@@ -34,6 +34,13 @@ import { z } from 'zod';
             (val) => (val ? Number(val) : undefined),
             z.number().default(1883),
           ),
+
+          AUTH_USERNAME: z.string(),
+          AUTH_PASSWORD_HASH: z.string(),
+          AUTH_PEPPER: z.string(),
+
+          JWT_SECRET: z.string(),
+          COOKIE_DOMAIN: z.string(),
         });
         return schema.parse(env);
       },

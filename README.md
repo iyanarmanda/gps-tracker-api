@@ -26,6 +26,8 @@ $ pnpm install
 
 Create `.env` variables based on `.env.example`.
 
+Run `pnpm script:hash` to generate hashed password and pepper.
+
 Drizzle ORM configuration:
 
 ```bash
