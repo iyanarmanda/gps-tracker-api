@@ -41,6 +41,16 @@ import { z } from 'zod';
 
           JWT_SECRET: z.string(),
           COOKIE_DOMAIN: z.string(),
+
+          THROTTLE_TTL: z.preprocess(
+            (val) => (val ? Number(val) : undefined),
+            z.number().default(60000),
+          ),
+
+          THROTTLE_LIMIT: z.preprocess(
+            (val) => (val ? Number(val) : undefined),
+            z.number().default(5),
+          ),
         });
         return schema.parse(env);
       },

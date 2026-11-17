@@ -12,7 +12,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ trustProxy: true }),
   );
 
   const configService = app.get(ConfigService);

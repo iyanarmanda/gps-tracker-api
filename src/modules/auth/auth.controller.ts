@@ -8,9 +8,11 @@ import {
   Post,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Public } from '../../common/decorators/public.decorator';
+import { ThrottlerGuard } from '../../common/guards/throttler.guard';
 import { AuthService } from './auth.service';
 import { ACCESS_TOKEN_COOKIE } from './constants/token.constant';
 import { LoginDto } from './schemas/login.schema';
@@ -39,7 +41,7 @@ export class AuthController {
   }
 
   @Get()
-  getMe(@Req() req: AuthenticatedFastifyRequest) {
+  check(@Req() req: AuthenticatedFastifyRequest) {
     return {
       authenticated: true,
       user: { username: req.user?.username ?? '' },
@@ -47,6 +49,7 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
