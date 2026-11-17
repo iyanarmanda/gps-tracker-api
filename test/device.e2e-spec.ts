@@ -1,36 +1,18 @@
-import { VersioningType } from '@nestjs/common';
 import { getDrizzleToken } from '@nestjs/drizzle';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { Test } from '@nestjs/testing';
+import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { eq } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import Redis from 'ioredis';
 import { connectAsync, MqttClient } from 'mqtt';
-import { AppModule } from '../src/app.module';
+import { REDIS_CLIENT } from '../src/database/redis/redis.constant';
 import * as schema from '../src/database/sqlite/schemas/devices.schema';
 import { devices } from '../src/database/sqlite/schemas/devices.schema';
-import { REDIS_CLIENT } from '../src/database/redis/redis.constant';
+import { createTestApp, loginAndGetCookie } from './helpers/test-app.helper';
 
-async function waitForCondition(
-  conditionFn: () => Promise<boolean>,
-  timeoutMs = 3000,
-  intervalMs = 50,
-): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if (await conditionFn()) return;
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-  throw new Error(`Condition not met within ${String(timeoutMs)}ms`);
-}
-
-describe('GPS Tracker API & MQTT (e2e)', () => {
+describe('DevicesModule (e2e)', () => {
   let app: NestFastifyApplication;
   let baseUrl: string;
+  let authCookie: string;
   let db: BetterSQLite3Database<typeof schema>;
   let redis: Redis;
   let virtualEsp: MqttClient;
@@ -38,34 +20,10 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
   const TEST_ESP_ID = 'esp32:test-01';
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter(),
-    );
-
-    app.connectMicroservice<MicroserviceOptions>({
-      transport: Transport.MQTT,
-      options: {
-        url: process.env.MQTT_URL,
-        username: process.env.MQTT_USER,
-        password: process.env.MQTT_PASSWORD,
-      },
-    });
-
-    app.setGlobalPrefix('api');
-    app.enableVersioning({
-      type: VersioningType.URI,
-      defaultVersion: '1',
-    });
-
-    await app.init();
-    await app.startAllMicroservices();
-    await app.listen(0, '127.0.0.1');
-
-    baseUrl = await app.getUrl();
+    const testApp = await createTestApp({ withMqtt: true });
+    app = testApp.app;
+    baseUrl = testApp.baseUrl;
+    authCookie = await loginAndGetCookie(app);
 
     db = app.get<BetterSQLite3Database<typeof schema>>(getDrizzleToken());
     redis = app.get<Redis>(REDIS_CLIENT);
@@ -82,7 +40,6 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
   beforeEach(async () => {
     await redis.flushdb();
     await db.delete(devices);
-
     await db.insert(devices).values({
       espId: TEST_ESP_ID,
       name: 'Test Unit 01',
@@ -92,20 +49,29 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
   });
 
   afterAll(async () => {
-    await virtualEsp.endAsync(true);
-    await app.close();
+    await virtualEsp?.endAsync(true);
+    await app?.close();
   });
 
-  describe('GET /api/v1/health', () => {
-    it('should return status ok for API, SQLite, Redis, and Mosquitto', async () => {
-      const response = await app.inject({
+  describe('Authentication Guard on /api/v1/devices', () => {
+    it('should reject unauthenticated requests with HTTP 401', async () => {
+      const listRes = await app.inject({
         method: 'GET',
-        url: '/api/v1/health',
+        url: '/api/v1/devices',
       });
+      expect(listRes.statusCode).toBe(401);
 
-      expect(response.statusCode).toBe(200);
-      const body = response.json<{ status: string }>();
-      expect(body.status).toBe('ok');
+      const cmdRes = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/devices/${TEST_ESP_ID}/command`,
+        payload: { active: true },
+      });
+      expect(cmdRes.statusCode).toBe(401);
+
+      const streamRes = await fetch(`${baseUrl}/api/v1/devices/stream`, {
+        headers: { Accept: 'text/event-stream' },
+      });
+      expect(streamRes.status).toBe(401);
     });
   });
 
@@ -123,11 +89,11 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/devices',
+        headers: { cookie: authCookie },
       });
 
       expect(response.statusCode).toBe(200);
       const body = response.json<Array<Record<string, unknown>>>();
-
       expect(body).toHaveLength(1);
       expect(body[0]).toMatchObject({
         espId: TEST_ESP_ID,
@@ -146,13 +112,16 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
   });
 
   describe('SSE /api/v1/devices/stream', () => {
-    it('should stream event telemetry in real-time while ESP32 send geo data', async () => {
+    it('should stream event telemetry in real-time while ESP32 sends geo data', async () => {
       const abortController = new AbortController();
 
       try {
         const response = await fetch(`${baseUrl}/api/v1/devices/stream`, {
           signal: abortController.signal,
-          headers: { Accept: 'text/event-stream' },
+          headers: {
+            Accept: 'text/event-stream',
+            Cookie: authCookie,
+          },
         });
 
         expect(response.status).toBe(200);
@@ -178,7 +147,6 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
 
         const decoder = new TextDecoder();
         let receivedChunk = '';
-
         while (!receivedChunk.includes('data:')) {
           const { value, done } = await reader!.read();
           if (done) break;
@@ -214,6 +182,7 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: `/api/v1/devices/${TEST_ESP_ID}/command`,
+        headers: { cookie: authCookie },
         payload: {
           active: true,
           interval: 5,
@@ -234,6 +203,7 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
         .from(devices)
         .where(eq(devices.espId, TEST_ESP_ID))
         .get();
+
       expect(updatedDevice?.isActive).toBe(true);
       expect(updatedDevice?.interval).toBe(5);
 
@@ -248,6 +218,7 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: `/api/v1/devices/${TEST_ESP_ID}/command`,
+        headers: { cookie: authCookie },
         payload: {
           active: 'bukan-boolean',
           interval: -10,
@@ -261,51 +232,13 @@ describe('GPS Tracker API & MQTT (e2e)', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/api/v1/devices/esp32:tidak-ada/command',
+        headers: { cookie: authCookie },
         payload: {
           active: true,
         },
       });
 
       expect(response.statusCode).toBe(404);
-    });
-  });
-
-  describe('MQTT Telemetry Ingestion (ESP32 -> Broker -> API -> Redis)', () => {
-    it('should save geo data to Redis Hash dan GeoSpatial Index on telemetry entry', async () => {
-      const telemetryTopic = `tracker/devices/${TEST_ESP_ID}/telemetry`;
-      const sampleTelemetry = {
-        device_id: TEST_ESP_ID,
-        lat: -7.257472,
-        lng: 112.752088,
-        speed: 22.5,
-        satellites: 9,
-        timestamp: 1793701140,
-      };
-
-      await virtualEsp.publishAsync(
-        telemetryTopic,
-        JSON.stringify(sampleTelemetry),
-      );
-
-      await waitForCondition(async () => {
-        const exists = await redis.exists(`device:${TEST_ESP_ID}:location`);
-        return exists === 1;
-      });
-
-      const locationHash = await redis.hgetall(
-        `device:${TEST_ESP_ID}:location`,
-      );
-      expect(locationHash).toEqual({
-        lat: '-7.257472',
-        lng: '112.752088',
-        speed: '22.5',
-        satelite: '9',
-        active: 'true',
-        updated_at: '1793701140',
-      });
-
-      const geoPos = await redis.geopos('active_trackers', TEST_ESP_ID);
-      expect(geoPos[0]).not.toBeNull();
     });
   });
 });

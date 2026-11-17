@@ -19,7 +19,7 @@
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
     "test:debug": "node --inspect-brk --experimental-vm-modules -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "NODE_ENV=test node --env-file=.env.test --experimental-vm-modules ./node_modules/jest/bin/jest.js -c test/jest-e2e.json",
+    "test:e2e": "NODE_ENV=test node --env-file=.env.test --experimental-vm-modules ./node_modules/jest/bin/jest.js -c test/jest-e2e.json --runInBand --detectOpenHandles",
     "test:e2e:up": "docker compose -f docker-compose.test.yaml --env-file .env.test up -d --wait",
     "test:e2e:down": "docker compose -f docker-compose.test.yaml --env-file .env.test down -v && rm -f tracker.test.db*",
     "db:push": "drizzle-kit push",
