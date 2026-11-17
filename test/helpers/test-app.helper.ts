@@ -11,9 +11,9 @@ import * as argon2 from 'argon2';
 import { AppModule } from '../../src/app.module';
 
 export const TEST_AUTH = {
-  username: process.env.AUTH_USERNAME,
+  username: process.env.AUTH_USERNAME ?? 'e2e-username',
   password: 'e2e-password',
-  pepper: process.env.AUTH_PEPPER,
+  pepper: process.env.AUTH_PEPPER ?? 'e2e-pepper',
 } as const;
 
 export async function waitForCondition(
