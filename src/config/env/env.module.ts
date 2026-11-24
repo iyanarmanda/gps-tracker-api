@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { z } from 'zod';
+import { ENV_FILE_MAP } from './env.constant';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+      envFilePath:
+        ENV_FILE_MAP[process.env.NODE_ENV ?? 'development'] ?? '.env',
       isGlobal: true,
       validate: (env) => {
         const schema = z.object({
@@ -16,6 +18,8 @@ import { z } from 'zod';
           NODE_ENV: z
             .enum(['production', 'development', 'test'])
             .default('production'),
+
+          CORS_ORIGIN: z.string(),
 
           SQLITE_URL: z.string(),
 

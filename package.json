@@ -11,7 +11,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "NODE_ENV=production node dist/main",
     "check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "oxlint --type-aware src/ test/",
@@ -26,6 +26,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env src/database/sqlite/seed/device.seed.ts",
     "script:hash": "node ./scripts/hash-password.mjs",
+    "docker:prod:up": "docker compose -f docker-compose.prod.yaml --env-file .env.production up -d --wait",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yaml --env-file .env.production down -v",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky"
   },

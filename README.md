@@ -67,7 +67,7 @@ $ pnpm run start:dev
 # build
 $ pnpm run build
 
-# production mode
+# production mode, (create .env.production file first)
 $ pnpm run start:prod
 ```
 

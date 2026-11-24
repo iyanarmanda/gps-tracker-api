@@ -1,0 +1,46 @@
+name: gps-tracker-prod
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: tracker-redis-prod
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: tracker-mosquitto-prod
+    restart: unless-stopped
+    environment:
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+    ports:
+      - "127.0.0.1:${MQTT_PORT}:1883"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -n "$$MQTT_USER" ] && [ -n "$$MQTT_PASSWORD" ]; then
+          if [ ! -f /mosquitto/config/passwordfile ]; then
+            mosquitto_passwd -b -c /mosquitto/config/passwordfile "$$MQTT_USER" "$$MQTT_PASSWORD"
+          else
+            mosquitto_passwd -b /mosquitto/config/passwordfile "$$MQTT_USER" "$$MQTT_PASSWORD"
+          fi
+          chown mosquitto:mosquitto /mosquitto/config/passwordfile
+          chmod 600 /mosquitto/config/passwordfile
+        fi
+        exec /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.prod.conf
+
+volumes:
+  redis_data:
+  mosquitto_data:
+  mosquitto_log:

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { EnvModule } from './config/env.module';
+import { EnvModule } from './config/env/env.module';
 import { MqttModule } from './config/mqtt/mqtt.module';
 import { SQLiteModule } from './database/sqlite/sqlite.module';
 import { RedisModule } from './database/redis/redis.module';

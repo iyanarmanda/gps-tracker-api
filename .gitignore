@@ -42,6 +42,7 @@ lerna-debug.log*
 .env
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
 .env.local
 
@@ -60,6 +61,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Mosquitto MQTT
 mosquitto/config/passwordfile
+mosquitto/certs/*
+!mosquitto/certs/.gitkeep
 
 # SQLite
 data/*.db
