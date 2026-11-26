@@ -4,6 +4,7 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { ConfigService } from '@nestjs/config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import fastifyCookie from '@fastify/cookie';
+import helmet from 'helmet';
 import { CorsConfig } from './config/cors.config';
 import { AppModule } from './app.module';
 
@@ -26,6 +27,8 @@ async function bootstrap() {
     },
   });
 
+  app.use(helmet());
+
   await app.register(fastifyCookie);
 
   app.enableCors(CorsConfig(configService));
@@ -41,6 +44,6 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 3000);
 
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port, '127.0.0.1');
 }
 void bootstrap();
