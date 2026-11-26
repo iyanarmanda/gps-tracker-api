@@ -169,3 +169,7 @@ $ pnpm run format
 $ pnpm run check
 ```
 
+## Local Production Setup
+
+See the local production setup [here](https://github.com/iyanarmanda/gps-tracker-api/blob/feat/security-hardening/doc/local-production.md).
+
