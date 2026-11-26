@@ -15,7 +15,9 @@ Database & Client:
 
 - [Mosquitto](https://mosquitto.org/)
 - [Redis](https://redis.io/)
+
 *or*
+
 - [Docker](https://www.docker.com/)
 
 ## Project setup
@@ -35,7 +37,7 @@ Drizzle ORM configuration:
 $ pnpm run db:push
 
 # manual migration
-$ pnpm drizzle-kit generate
+$ pnpm run db:generate
 $ pnpm run db:migrate
 ```
 
